@@ -1,12 +1,115 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Moon, Sun, Calendar, Clock } from "lucide-react";
+import Header from "@/components/Header";
+import FastingCard from "@/components/FastingCard";
+import AffirmationBanner from "@/components/AffirmationBanner";
+import SubscriptionPlans from "@/components/SubscriptionPlans";
 
 const Index = () => {
+  const [currentFast, setCurrentFast] = useState({
+    type: "40 Days of Clarity",
+    daysCompleted: 12,
+    totalDays: 40,
+    startDate: "2024-05-01",
+    isActive: true
+  });
+
+  const [showSubscription, setShowSubscription] = useState(false);
+
+  const progressPercentage = (currentFast.daysCompleted / currentFast.totalDays) * 100;
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50 to-orange-50">
+      <Header />
+      
+      <main className="container mx-auto px-6 py-12 max-w-6xl">
+        <AffirmationBanner />
+        
+        {/* Hero Section */}
+        <div className="text-center mb-16 animate-fade-in">
+          <h1 className="text-5xl font-light mb-6 text-stone-800 tracking-wide">
+            Welcome to Your Journey
+          </h1>
+          <p className="text-xl text-stone-600 max-w-2xl mx-auto leading-relaxed">
+            A sacred space for digital discipline, where technology serves your spiritual growth
+          </p>
+        </div>
+
+        {/* Current Fast Dashboard */}
+        {currentFast.isActive ? (
+          <Card className="mb-12 border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+            <CardHeader className="text-center pb-8">
+              <CardTitle className="text-3xl font-light text-stone-700 mb-2">
+                {currentFast.type}
+              </CardTitle>
+              <Badge variant="secondary" className="bg-sage-100 text-sage-800 px-4 py-2">
+                Day {currentFast.daysCompleted} of {currentFast.totalDays}
+              </Badge>
+            </CardHeader>
+            <CardContent className="px-8 pb-8">
+              <div className="space-y-6">
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-stone-600">Progress</span>
+                    <span className="text-stone-800 font-medium">{Math.round(progressPercentage)}%</span>
+                  </div>
+                  <Progress 
+                    value={progressPercentage} 
+                    className="h-3 bg-stone-200"
+                  />
+                </div>
+                
+                <div className="grid md:grid-cols-3 gap-6 mt-8">
+                  <div className="text-center p-6 rounded-lg bg-gradient-to-br from-amber-50 to-orange-50">
+                    <Calendar className="mx-auto mb-3 text-amber-600" size={32} />
+                    <div className="text-2xl font-light text-stone-800">{currentFast.daysCompleted}</div>
+                    <div className="text-stone-600">Days Completed</div>
+                  </div>
+                  
+                  <div className="text-center p-6 rounded-lg bg-gradient-to-br from-green-50 to-emerald-50">
+                    <Clock className="mx-auto mb-3 text-green-600" size={32} />
+                    <div className="text-2xl font-light text-stone-800">{currentFast.totalDays - currentFast.daysCompleted}</div>
+                    <div className="text-stone-600">Days Remaining</div>
+                  </div>
+                  
+                  <div className="text-center p-6 rounded-lg bg-gradient-to-br from-purple-50 to-indigo-50">
+                    <Moon className="mx-auto mb-3 text-purple-600" size={32} />
+                    <div className="text-2xl font-light text-stone-800">Active</div>
+                    <div className="text-stone-600">Status</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <FastingCard onStartFast={() => setShowSubscription(true)} />
+        )}
+
+        {/* Subscription Plans */}
+        {showSubscription && <SubscriptionPlans />}
+
+        {/* Daily Reflection */}
+        <Card className="border-0 shadow-lg bg-gradient-to-r from-stone-100 to-amber-100">
+          <CardHeader>
+            <CardTitle className="text-2xl font-light text-stone-700 flex items-center gap-3">
+              <Sun className="text-amber-600" size={28} />
+              Today's Reflection
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <blockquote className="text-lg italic text-stone-700 leading-relaxed">
+              "In the depths of silence, we discover the voice of our soul. Today, I choose presence over 
+              distraction, depth over surface, and peace over chaos."
+            </blockquote>
+            <cite className="block mt-4 text-stone-500">— Your Digital Sanctuary</cite>
+          </CardContent>
+        </Card>
+      </main>
     </div>
   );
 };
