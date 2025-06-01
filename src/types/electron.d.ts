@@ -1,32 +1,26 @@
-
-export interface ElectronAPI {
-  checkDNSStatus: () => Promise<{
-    success: boolean;
-    currentDNS?: string;
-    isFiltered?: boolean;
-    error?: string;
-  }>;
+interface ElectronAPI {
+  // DNS Management
+  checkDNSStatus: () => Promise<any>;
+  applyDNSFilter: (filterType: string) => Promise<any>;
+  removeDNSFilter: () => Promise<any>;
+  requestAdminPrivileges: () => Promise<any>;
   
-  applyDNSFilter: (filterType: string) => Promise<{
-    success: boolean;
-    result?: any;
-    error?: string;
-  }>;
+  // Accountability Features
+  notifySpiritualSponsor: (data: any) => Promise<any>;
+  sendProgressReport: (data: any) => Promise<any>;
   
-  removeDNSFilter: () => Promise<{
-    success: boolean;
-    result?: any;
-    error?: string;
-  }>;
+  // Monitoring Settings
+  updateMonitoringSettings: (settings: any) => Promise<any>;
+  getViolationStatus: () => Promise<any>;
   
-  requestAdminPrivileges: () => Promise<{
-    success: boolean;
-    error?: string;
-  }>;
-  
+  // Platform info
   platform: string;
+  
+  // App info
   getVersion: () => Promise<string>;
-  showNotification: (title: string, body: string) => Promise<void>;
+  
+  // Notifications
+  showNotification: (title: string, body: string) => Promise<any>;
 }
 
 declare global {
@@ -34,3 +28,5 @@ declare global {
     electronAPI: ElectronAPI;
   }
 }
+
+export {};

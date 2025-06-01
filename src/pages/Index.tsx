@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Moon, Sun, Calendar, Clock } from "lucide-react";
+import { Moon, Sun, Calendar, Clock, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import Header from "@/components/Header";
 import FastingCard from "@/components/FastingCard";
 import AffirmationBanner from "@/components/AffirmationBanner";
 import SubscriptionPlans from "@/components/SubscriptionPlans";
+import { useSubscriptionReminder } from "@/hooks/useSubscriptionReminder";
 
 const Index = () => {
   const [currentFast, setCurrentFast] = useState({
@@ -21,6 +23,15 @@ const Index = () => {
 
   const [showSubscription, setShowSubscription] = useState(false);
 
+  // Mock subscription data - in real app this would come from context/state
+  const [subscriptionData, setSubscriptionData] = useState({
+    subscribed: true,
+    subscriptionTier: "Digital Seeker",
+    subscriptionEnd: "2025-06-06T00:00:00Z" // 5 days from now for demo
+  });
+
+  const { daysUntilExpiry, showReminderBanner } = useSubscriptionReminder(subscriptionData);
+
   const progressPercentage = (currentFast.daysCompleted / currentFast.totalDays) * 100;
 
   return (
@@ -29,6 +40,23 @@ const Index = () => {
       
       <main className="container mx-auto px-6 py-12 max-w-6xl">
         <AffirmationBanner />
+        
+        {/* Subscription Renewal Reminder */}
+        {showReminderBanner && (
+          <Alert className="mb-8 border-amber-200 bg-amber-50">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800">
+              <strong>Sacred Commitment Renewal:</strong> Your {subscriptionData.subscriptionTier} subscription expires in {daysUntilExpiry} day{daysUntilExpiry === 1 ? '' : 's'}. 
+              <Button 
+                variant="link" 
+                className="p-0 ml-2 text-amber-700 underline h-auto"
+                onClick={() => setShowSubscription(true)}
+              >
+                Renew or enhance your journey →
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
         
         {/* Hero Section */}
         <div className="text-center mb-16 animate-fade-in">
