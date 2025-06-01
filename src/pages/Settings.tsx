@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Shield, Wifi, Bell, Moon, Volume2, Lock } from "lucide-react";
 import { useElectronDNS } from "@/hooks/useElectronDNS";
 import Header from "@/components/Header";
+import SpiritualSponsor from "@/components/SpiritualSponsor";
+import MonitoringSettings from "@/components/MonitoringSettings";
 
 const Settings = () => {
   const { dnsStatus, isLoading, checkDNSStatus, applyDNSFilter, removeDNSFilter, requestAdminPrivileges } = useElectronDNS();
@@ -90,6 +91,12 @@ const Settings = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Spiritual Sponsor */}
+          <SpiritualSponsor />
+
+          {/* Monitoring Settings */}
+          <MonitoringSettings />
 
           {/* Subscription Settings */}
           <Card className="border-stone-200/50 shadow-sm">

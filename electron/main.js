@@ -63,6 +63,11 @@ ipcMain.handle('apply-dns-filter', async (event, filterType) => {
   const dnsManager = require('./services/dnsManager');
   try {
     const result = await dnsManager.applyDNSFilter(filterType);
+    
+    // Start protection monitoring after applying DNS filter
+    const protectionManager = require('./services/protectionManager');
+    await protectionManager.startMonitoring();
+    
     return { success: true, result };
   } catch (error) {
     return { success: false, error: error.message };
@@ -73,6 +78,11 @@ ipcMain.handle('remove-dns-filter', async () => {
   const dnsManager = require('./services/dnsManager');
   try {
     const result = await dnsManager.removeDNSFilter();
+    
+    // Stop protection monitoring when removing DNS filter
+    const protectionManager = require('./services/protectionManager');
+    await protectionManager.stopMonitoring();
+    
     return { success: true, result };
   } catch (error) {
     return { success: false, error: error.message };
@@ -99,4 +109,26 @@ ipcMain.handle('request-admin-privileges', async () => {
   } catch (error) {
     return { success: false, error: error.message };
   }
+});
+
+// New IPC handlers for accountability and monitoring
+ipcMain.handle('notify-spiritual-sponsor', async (event, data) => {
+  const accountabilityManager = require('./services/accountabilityManager');
+  return await accountabilityManager.notifySpiritualSponsor(data);
+});
+
+ipcMain.handle('send-progress-report', async (event, data) => {
+  const accountabilityManager = require('./services/accountabilityManager');
+  return await accountabilityManager.sendProgressReport(data);
+});
+
+ipcMain.handle('update-monitoring-settings', async (event, settings) => {
+  const protectionManager = require('./services/protectionManager');
+  protectionManager.updateSettings(settings);
+  return { success: true };
+});
+
+ipcMain.handle('get-violation-status', async () => {
+  const protectionManager = require('./services/protectionManager');
+  return protectionManager.getViolationStatus();
 });

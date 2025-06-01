@@ -1,4 +1,3 @@
-
 const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
@@ -11,7 +10,14 @@ class ProtectionManager {
     this.platform = process.platform;
     this.monitoringActive = false;
     this.violationCount = 0;
-    this.maxViolations = 2; // One warning, then termination
+    this.maxViolations = 2;
+    this.settings = {
+      autoStartOnBoot: true,
+      backgroundService: true,
+      usageMonitoring: false,
+      screenshotDetection: false,
+      proxyVpnDetection: true
+    };
   }
 
   async startMonitoring() {
@@ -25,24 +31,92 @@ class ProtectionManager {
       this.checkDNSIntegrity();
     }, 30000);
 
-    // Monitor VPN connections
-    this.vpnMonitorInterval = setInterval(() => {
-      this.checkVPNStatus();
-    }, 15000);
+    // Monitor VPN connections if enabled
+    if (this.settings.proxyVpnDetection) {
+      this.vpnMonitorInterval = setInterval(() => {
+        this.checkVPNStatus();
+      }, 15000);
+    }
+
+    // Usage monitoring if enabled
+    if (this.settings.usageMonitoring) {
+      this.usageMonitorInterval = setInterval(() => {
+        this.monitorAppUsage();
+      }, 60000); // Check every minute
+    }
+
+    // Auto-start setup
+    if (this.settings.autoStartOnBoot) {
+      await this.setupAutoStart();
+    }
   }
 
   async stopMonitoring() {
     this.monitoringActive = false;
     
-    if (this.dnsMonitorInterval) {
-      clearInterval(this.dnsMonitorInterval);
-    }
-    
-    if (this.vpnMonitorInterval) {
-      clearInterval(this.vpnMonitorInterval);
-    }
+    if (this.dnsMonitorInterval) clearInterval(this.dnsMonitorInterval);
+    if (this.vpnMonitorInterval) clearInterval(this.vpnMonitorInterval);
+    if (this.usageMonitorInterval) clearInterval(this.usageMonitorInterval);
     
     console.log('🛡️ NetFast protection monitoring stopped');
+  }
+
+  updateSettings(newSettings) {
+    this.settings = { ...this.settings, ...newSettings };
+    console.log('📝 Monitoring settings updated:', this.settings);
+    
+    // Restart monitoring with new settings if active
+    if (this.monitoringActive) {
+      this.stopMonitoring();
+      this.startMonitoring();
+    }
+  }
+
+  async setupAutoStart() {
+    try {
+      if (this.platform === 'win32') {
+        // Windows: Add to startup registry
+        const command = `reg add "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "NetFast" /t REG_SZ /d "${process.execPath}" /f`;
+        await execAsync(command);
+      } else if (this.platform === 'darwin') {
+        // macOS: Create launch agent
+        const plistPath = path.join(require('os').homedir(), 'Library/LaunchAgents/com.netfast.app.plist');
+        const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.netfast.app</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>${process.execPath}</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+</dict>
+</plist>`;
+        fs.writeFileSync(plistPath, plistContent);
+      } else {
+        // Linux: Create desktop autostart entry
+        const autostartDir = path.join(require('os').homedir(), '.config/autostart');
+        if (!fs.existsSync(autostartDir)) {
+          fs.mkdirSync(autostartDir, { recursive: true });
+        }
+        const desktopFile = path.join(autostartDir, 'netfast.desktop');
+        const desktopContent = `[Desktop Entry]
+Type=Application
+Name=NetFast
+Exec=${process.execPath}
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true`;
+        fs.writeFileSync(desktopFile, desktopContent);
+      }
+      
+      console.log('✅ Auto-start configured successfully');
+    } catch (error) {
+      console.error('❌ Failed to setup auto-start:', error);
+    }
   }
 
   async checkDNSIntegrity() {
@@ -73,10 +147,38 @@ class ProtectionManager {
       const { stdout } = await execAsync(command);
       
       if (stdout && stdout.trim().length > 0) {
-        await this.handleViolation('VPN connection detected');
+        await this.handleViolation('VPN/Proxy connection detected');
       }
     } catch (error) {
       // No VPN detected (expected case)
+    }
+  }
+
+  async monitorAppUsage() {
+    if (!this.settings.usageMonitoring) return;
+    
+    try {
+      let command;
+      
+      if (this.platform === 'win32') {
+        command = 'tasklist /FO CSV | findstr "chrome.exe\\|firefox.exe\\|msedge.exe"';
+      } else if (this.platform === 'darwin') {
+        command = 'ps aux | grep -E "(Chrome|Firefox|Safari)" | grep -v grep';
+      } else {
+        command = 'ps aux | grep -E "(chrome|firefox|chromium)" | grep -v grep';
+      }
+      
+      const { stdout } = await execAsync(command);
+      
+      if (stdout && stdout.trim().length > 0) {
+        console.log('📱 Browser usage detected:', stdout.split('\n').length, 'processes');
+        
+        // Log usage for progress reports
+        const accountabilityManager = require('./accountabilityManager');
+        accountabilityManager.addStrengthMoment(`Monitored browser usage at ${new Date().toLocaleTimeString()}`);
+      }
+    } catch (error) {
+      // Normal - no browsers running
     }
   }
 
@@ -85,12 +187,33 @@ class ProtectionManager {
     
     console.log(`⚠️ Violation detected: ${reason} (${this.violationCount}/${this.maxViolations})`);
     
+    // Notify spiritual sponsor
+    try {
+      const accountabilityManager = require('./accountabilityManager');
+      await accountabilityManager.notifySpiritualSponsor({
+        sponsor: this.getSponsorData(),
+        violationType: reason,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Failed to notify sponsor:', error);
+    }
+    
     if (this.violationCount === 1) {
-      // First violation - compassionate warning
       await this.showCompassionateWarning(reason);
     } else if (this.violationCount >= this.maxViolations) {
-      // Second violation - terminate subscription
       await this.terminateSubscription(reason);
+    }
+  }
+
+  getSponsorData() {
+    // Get sponsor data from localStorage or return null
+    try {
+      const sponsorData = require('electron').app.getPath('userData');
+      // In a real implementation, you'd read from a proper storage
+      return null; // Placeholder
+    } catch {
+      return null;
     }
   }
 
@@ -114,10 +237,9 @@ One more attempt to bypass your protection will unfortunately require us to end 
     });
 
     if (response.response === 1) {
-      // User chose to restore protection
       const dnsManager = require('./dnsManager');
       await dnsManager.applyDNSFilter('opendns');
-      this.violationCount = 0; // Reset violation count
+      this.violationCount = 0;
     }
   }
 
@@ -138,11 +260,9 @@ May you find peace in your choices. 🙏`,
       buttons: ['Close']
     });
 
-    // Remove DNS protection
     const dnsManager = require('./dnsManager');
     await dnsManager.removeDNSFilter();
     
-    // Close the application
     app.quit();
   }
 
