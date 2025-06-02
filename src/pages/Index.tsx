@@ -12,8 +12,6 @@ import SubscriptionPlans from "@/components/SubscriptionPlans";
 import CircularProgress from "@/components/CircularProgress";
 import MilestoneCelebration from "@/components/MilestoneCelebration";
 import StreakCounter from "@/components/StreakCounter";
-import ThemeSelector from "@/components/ThemeSelector";
-import TodaysFocusWidget from "@/components/TodaysFocusWidget";
 import { useSubscriptionReminder } from "@/hooks/useSubscriptionReminder";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -75,12 +73,10 @@ const Index = () => {
         </div>
 
         {/* Dashboard Widgets Grid */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-12">
-          <TodaysFocusWidget />
-          <ThemeSelector />
-          <div className="lg:row-span-2">
+        <div className="grid lg:grid-cols-1 gap-6 mb-12">
+          <div className="flex justify-center">
             {currentFast.isActive && (
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm h-full">
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm w-full max-w-md">
                 <CardHeader className="text-center">
                   <CardTitle className="text-lg font-light text-stone-700 mb-4">
                     Current Streak
