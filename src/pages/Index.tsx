@@ -11,7 +11,6 @@ import AffirmationBanner from "@/components/AffirmationBanner";
 import SubscriptionPlans from "@/components/SubscriptionPlans";
 import CircularProgress from "@/components/CircularProgress";
 import MilestoneCelebration from "@/components/MilestoneCelebration";
-import StreakCounter from "@/components/StreakCounter";
 import { useSubscriptionReminder } from "@/hooks/useSubscriptionReminder";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -70,34 +69,6 @@ const Index = () => {
           <p className="text-xl text-stone-600 max-w-2xl mx-auto leading-relaxed">
             A sacred space for digital discipline, where technology serves your spiritual growth
           </p>
-        </div>
-
-        {/* Dashboard Widgets Grid */}
-        <div className="grid lg:grid-cols-1 gap-6 mb-12">
-          <div className="flex justify-center">
-            {currentFast.isActive && (
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm w-full max-w-md">
-                <CardHeader className="text-center">
-                  <CardTitle className="text-lg font-light text-stone-700 mb-4">
-                    Current Streak
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-col items-center justify-center h-full">
-                  <StreakCounter streakDays={currentFast.daysCompleted} className="mb-6" />
-                  <CircularProgress 
-                    progress={progressPercentage}
-                    size={140}
-                    className="mb-4"
-                  >
-                    <div className="text-center">
-                      <div className="text-2xl font-light text-stone-800">{Math.round(progressPercentage)}%</div>
-                      <div className="text-sm text-stone-600">Complete</div>
-                    </div>
-                  </CircularProgress>
-                </CardContent>
-              </Card>
-            )}
-          </div>
         </div>
 
         {/* Current Fast Dashboard */}
