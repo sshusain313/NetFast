@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Moon, Sun, Calendar, Clock, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -10,7 +9,13 @@ import Header from "@/components/Header";
 import FastingCard from "@/components/FastingCard";
 import AffirmationBanner from "@/components/AffirmationBanner";
 import SubscriptionPlans from "@/components/SubscriptionPlans";
+import CircularProgress from "@/components/CircularProgress";
+import MilestoneCelebration from "@/components/MilestoneCelebration";
+import StreakCounter from "@/components/StreakCounter";
+import ThemeSelector from "@/components/ThemeSelector";
+import TodaysFocusWidget from "@/components/TodaysFocusWidget";
 import { useSubscriptionReminder } from "@/hooks/useSubscriptionReminder";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const Index = () => {
   const [currentFast, setCurrentFast] = useState({
@@ -22,6 +27,7 @@ const Index = () => {
   });
 
   const [showSubscription, setShowSubscription] = useState(false);
+  const { timeBasedBackground } = useTheme();
 
   // Mock subscription data - in real app this would come from context/state
   const [subscriptionData, setSubscriptionData] = useState({
@@ -35,7 +41,7 @@ const Index = () => {
   const progressPercentage = (currentFast.daysCompleted / currentFast.totalDays) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50 to-orange-50">
+    <div className={`min-h-screen ${timeBasedBackground}`}>
       <Header />
       
       <main className="container mx-auto px-6 py-12 max-w-6xl">
@@ -68,6 +74,36 @@ const Index = () => {
           </p>
         </div>
 
+        {/* Dashboard Widgets Grid */}
+        <div className="grid lg:grid-cols-3 gap-6 mb-12">
+          <TodaysFocusWidget />
+          <ThemeSelector />
+          <div className="lg:row-span-2">
+            {currentFast.isActive && (
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm h-full">
+                <CardHeader className="text-center">
+                  <CardTitle className="text-lg font-light text-stone-700 mb-4">
+                    Current Streak
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col items-center justify-center h-full">
+                  <StreakCounter streakDays={currentFast.daysCompleted} className="mb-6" />
+                  <CircularProgress 
+                    progress={progressPercentage}
+                    size={140}
+                    className="mb-4"
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl font-light text-stone-800">{Math.round(progressPercentage)}%</div>
+                      <div className="text-sm text-stone-600">Complete</div>
+                    </div>
+                  </CircularProgress>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+
         {/* Current Fast Dashboard */}
         {currentFast.isActive ? (
           <Card className="mb-12 border-0 shadow-xl bg-white/80 backdrop-blur-sm">
@@ -80,36 +116,23 @@ const Index = () => {
               </Badge>
             </CardHeader>
             <CardContent className="px-8 pb-8">
-              <div className="space-y-6">
-                <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-stone-600">Progress</span>
-                    <span className="text-stone-800 font-medium">{Math.round(progressPercentage)}%</span>
-                  </div>
-                  <Progress 
-                    value={progressPercentage} 
-                    className="h-3 bg-stone-200"
-                  />
+              <div className="grid md:grid-cols-3 gap-6 mt-8">
+                <div className="text-center p-6 rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 hover:shadow-lg transition-shadow">
+                  <Calendar className="mx-auto mb-3 text-amber-600" size={32} />
+                  <div className="text-2xl font-light text-stone-800">{currentFast.daysCompleted}</div>
+                  <div className="text-stone-600">Days Completed</div>
                 </div>
                 
-                <div className="grid md:grid-cols-3 gap-6 mt-8">
-                  <div className="text-center p-6 rounded-lg bg-gradient-to-br from-amber-50 to-orange-50">
-                    <Calendar className="mx-auto mb-3 text-amber-600" size={32} />
-                    <div className="text-2xl font-light text-stone-800">{currentFast.daysCompleted}</div>
-                    <div className="text-stone-600">Days Completed</div>
-                  </div>
-                  
-                  <div className="text-center p-6 rounded-lg bg-gradient-to-br from-green-50 to-emerald-50">
-                    <Clock className="mx-auto mb-3 text-green-600" size={32} />
-                    <div className="text-2xl font-light text-stone-800">{currentFast.totalDays - currentFast.daysCompleted}</div>
-                    <div className="text-stone-600">Days Remaining</div>
-                  </div>
-                  
-                  <div className="text-center p-6 rounded-lg bg-gradient-to-br from-purple-50 to-indigo-50">
-                    <Moon className="mx-auto mb-3 text-purple-600" size={32} />
-                    <div className="text-2xl font-light text-stone-800">Active</div>
-                    <div className="text-stone-600">Status</div>
-                  </div>
+                <div className="text-center p-6 rounded-lg bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-lg transition-shadow">
+                  <Clock className="mx-auto mb-3 text-green-600" size={32} />
+                  <div className="text-2xl font-light text-stone-800">{currentFast.totalDays - currentFast.daysCompleted}</div>
+                  <div className="text-stone-600">Days Remaining</div>
+                </div>
+                
+                <div className="text-center p-6 rounded-lg bg-gradient-to-br from-purple-50 to-indigo-50 hover:shadow-lg transition-shadow">
+                  <Moon className="mx-auto mb-3 text-purple-600" size={32} />
+                  <div className="text-2xl font-light text-stone-800">Active</div>
+                  <div className="text-stone-600">Status</div>
                 </div>
               </div>
             </CardContent>
@@ -117,6 +140,9 @@ const Index = () => {
         ) : (
           <FastingCard onStartFast={() => setShowSubscription(true)} />
         )}
+
+        {/* Milestone Celebration */}
+        <MilestoneCelebration daysCompleted={currentFast.daysCompleted} />
 
         {/* Subscription Plans */}
         {showSubscription && <SubscriptionPlans />}
