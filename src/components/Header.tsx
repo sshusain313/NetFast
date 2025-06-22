@@ -41,6 +41,14 @@ const Header = () => {
                 Account
               </Button>
             </Link>
+            <Link to="/admin">
+              <Button 
+                variant="ghost" 
+                className={`text-stone-600 hover:text-stone-800 ${location.pathname === '/admin' ? 'bg-stone-100' : ''}`}
+              >
+                Admin
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
