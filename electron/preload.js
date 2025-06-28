@@ -1,4 +1,3 @@
-
 const { contextBridge, ipcRenderer } = require('electron');
 
 // Expose protected methods that allow the renderer process to use
@@ -10,6 +9,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeDNSFilter: () => ipcRenderer.invoke('remove-dns-filter'),
   requestAdminPrivileges: () => ipcRenderer.invoke('request-admin-privileges'),
   
+  // Device Management
+  getDeviceInfo: () => ipcRenderer.invoke('get-device-info'),
+  registerDevice: (deviceData) => ipcRenderer.invoke('register-device', deviceData),
+  sendHeartbeat: (heartbeatData) => ipcRenderer.invoke('send-heartbeat', heartbeatData),
+  
   // Accountability Features
   notifySpiritualSponsor: (data) => ipcRenderer.invoke('notify-spiritual-sponsor', data),
   sendProgressReport: (data) => ipcRenderer.invoke('send-progress-report', data),
@@ -18,12 +22,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   updateMonitoringSettings: (settings) => ipcRenderer.invoke('update-monitoring-settings', settings),
   getViolationStatus: () => ipcRenderer.invoke('get-violation-status'),
   
+  // Security and Monitoring
+  reportViolation: (violationData) => ipcRenderer.invoke('report-violation', violationData),
+  
+  // App lifecycle
+  getVersion: () => ipcRenderer.invoke('get-app-version'),
+  quitApp: () => ipcRenderer.invoke('quit-app'),
+  
+  // Enhanced Notifications
+  showNotification: (notificationData) => ipcRenderer.invoke('show-notification', notificationData),
+  
   // Platform info
   platform: process.platform,
-  
-  // App info
-  getVersion: () => ipcRenderer.invoke('get-app-version'),
-  
-  // Notifications
-  showNotification: (title, body) => ipcRenderer.invoke('show-notification', title, body)
 });

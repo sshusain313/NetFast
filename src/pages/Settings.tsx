@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Shield, Wifi, Bell, Moon, Volume2, Lock } from "lucide-react";
 import { useElectronDNS } from "@/hooks/useElectronDNS";
 import Header from "@/components/Header";
@@ -16,19 +17,45 @@ const Settings = () => {
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [sounds, setSounds] = useState(true);
+  const [selectedDNSProvider, setSelectedDNSProvider] = useState('opendns');
 
   useEffect(() => {
     checkDNSStatus();
   }, []);
 
   const handleToggleProtection = async () => {
-    if (dnsStatus?.isFiltered) {
-      await removeDNSFilter();
-    } else {
-      const adminResult = await requestAdminPrivileges();
-      if (adminResult.success) {
-        await applyDNSFilter('opendns');
+    try {
+      if (dnsStatus?.isFiltered) {
+        console.log('🔄 Removing DNS filter...');
+        const result = await removeDNSFilter();
+        console.log('Remove result:', result);
+        
+        if (!result.success) {
+          alert(`Failed to remove DNS filter: ${result.error}`);
+        }
+      } else {
+        console.log('🛡️ Requesting admin privileges...');
+        const adminResult = await requestAdminPrivileges();
+        console.log('Admin result:', adminResult);
+        
+        if (adminResult.success) {
+          console.log('✅ Admin privileges granted, applying DNS filter...');
+          const result = await applyDNSFilter(selectedDNSProvider);
+          console.log('Apply result:', result);
+          
+          if (!result.success) {
+            // If DNS operation fails, it's likely due to admin privileges
+            alert(`DNS filter application failed: ${result.error}\n\nThis usually means administrator privileges are required.\n\nTo enable DNS filtering:\n1. Close this app\n2. Right-click the app icon\n3. Select "Run as administrator"\n4. Try again`);
+          }
+        } else {
+          // Provide better guidance for admin privileges
+          const message = adminResult.error || 'Administrator privileges required';
+          alert(`${message}\n\nTo enable DNS filtering:\n1. Close this app\n2. Right-click the app icon\n3. Select "Run as administrator"\n4. Try again`);
+        }
       }
+    } catch (error) {
+      console.error('❌ DNS toggle failed:', error);
+      alert(`DNS operation failed: ${error.message}`);
     }
   };
 
@@ -75,6 +102,9 @@ const Settings = () => {
                   <p className="text-xs text-stone-500 mt-1">
                     Block distracting websites at the network level
                   </p>
+                  <p className="text-xs text-amber-600 mt-1">
+                    ⚠️ Requires administrator privileges
+                  </p>
                 </div>
                 <Switch 
                   checked={dnsStatus?.isFiltered || false}
@@ -83,10 +113,62 @@ const Settings = () => {
                 />
               </div>
 
+              <Separator />
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">DNS Provider</Label>
+                <Select value={selectedDNSProvider} onValueChange={setSelectedDNSProvider}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select DNS provider" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="opendns">
+                      <div className="flex items-center gap-2">
+                        <span>OpenDNS Family Shield</span>
+                        <Badge variant="outline" className="text-xs">Default</Badge>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="cleanBrowsing">
+                      <div className="flex items-center gap-2">
+                        <span>CleanBrowsing Adult Filter</span>
+                        <Badge variant="outline" className="text-xs">Strong</Badge>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="cloudflareFamily">
+                      <div className="flex items-center gap-2">
+                        <span>Cloudflare Family Protection</span>
+                        <Badge variant="outline" className="text-xs">Fast</Badge>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-stone-500">
+                  {selectedDNSProvider === 'opendns' && 'Blocks adult content and malware'}
+                  {selectedDNSProvider === 'cleanBrowsing' && 'Comprehensive adult content filtering'}
+                  {selectedDNSProvider === 'cloudflareFamily' && 'Fast DNS with family protection'}
+                </p>
+              </div>
+
               {dnsStatus?.currentDNS && (
                 <div className="p-3 bg-stone-50 rounded-lg">
                   <Label className="text-xs text-stone-600">Current DNS</Label>
                   <p className="text-sm font-mono text-stone-800">{dnsStatus.currentDNS}</p>
+                </div>
+              )}
+
+              {/* Debug Information */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <Label className="text-xs text-blue-600 font-medium">Debug Info</Label>
+                  <div className="text-xs text-blue-700 mt-1 space-y-1">
+                    <p>Success: {dnsStatus?.success ? 'Yes' : 'No'}</p>
+                    <p>Is Filtered: {dnsStatus?.isFiltered ? 'Yes' : 'No'}</p>
+                    <p>Loading: {isLoading ? 'Yes' : 'No'}</p>
+                    <p>Selected Provider: {selectedDNSProvider}</p>
+                    {dnsStatus?.error && (
+                      <p className="text-red-600">Error: {dnsStatus.error}</p>
+                    )}
+                  </div>
                 </div>
               )}
             </CardContent>
