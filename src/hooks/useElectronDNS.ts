@@ -5,12 +5,14 @@ interface DNSStatus {
   success: boolean;
   currentDNS?: string;
   isFiltered?: boolean;
+  filterType?: string;
   error?: string;
 }
 
 interface DNSResult {
   success: boolean;
   result?: any;
+  filterType?: string;
   error?: string;
 }
 

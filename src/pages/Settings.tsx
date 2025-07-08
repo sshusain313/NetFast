@@ -18,6 +18,14 @@ const Settings = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [sounds, setSounds] = useState(true);
   const [selectedDNSProvider, setSelectedDNSProvider] = useState('opendns');
+  
+  // Set the selected DNS provider based on the detected filter type
+  useEffect(() => {
+    if (dnsStatus?.filterType && dnsStatus.isFiltered) {
+      console.log('Setting DNS provider from detected filter:', dnsStatus.filterType);
+      setSelectedDNSProvider(dnsStatus.filterType);
+    }
+  }, [dnsStatus?.filterType, dnsStatus?.isFiltered]);
 
   useEffect(() => {
     checkDNSStatus();
@@ -163,6 +171,7 @@ const Settings = () => {
                   <div className="text-xs text-blue-700 mt-1 space-y-1">
                     <p>Success: {dnsStatus?.success ? 'Yes' : 'No'}</p>
                     <p>Is Filtered: {dnsStatus?.isFiltered ? 'Yes' : 'No'}</p>
+                    <p>Filter Type: {dnsStatus?.filterType || 'None'}</p>
                     <p>Loading: {isLoading ? 'Yes' : 'No'}</p>
                     <p>Selected Provider: {selectedDNSProvider}</p>
                     {dnsStatus?.error && (

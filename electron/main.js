@@ -90,17 +90,28 @@ ipcMain.handle('check-dns-status', async () => {
     const result = await dnsManager.checkCurrentDNS();
     console.log('📡 DNS Status result:', result);
     
-    // Return the result in the expected format
+    // Return the result in the expected format, including filter type
     return {
       success: result.success,
       currentDNS: result.currentDNS,
       isFiltered: result.isFiltered,
+      filterType: result.filterType,
       error: result.error
     };
   } catch (error) {
     console.error('❌ DNS Status check failed:', error);
+    
+    // Try to get the last known filter type even if the check fails
+    let lastFilterType = null;
+    try {
+      lastFilterType = dnsManager.getLastFilterType();
+    } catch (e) {
+      console.error('Failed to get last filter type:', e);
+    }
+    
     return {
       success: false,
+      filterType: lastFilterType,
       error: error.message
     };
   }
